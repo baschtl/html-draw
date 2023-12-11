@@ -1,0 +1,13 @@
+html, body {
+  margin: 0;
+}
+
+.canvas-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+}
