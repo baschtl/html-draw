@@ -8,35 +8,33 @@ export default function Canvas() {
     height: window.innerHeight,
   });
 
-  const [lastCoords, setLastCoords] = useState({ x: 0, y: 0 });
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [hue, setHue] = useState(0);
-
+  
   const canvasRef = useRef(null);
   const ctx = useRef(null);
+  const lastCoords = useRef({ x: 0, y: 0 });
+  const isDrawing = useRef(false);
   const direction = useRef(true);
+  const hue = useRef(0);
 
   const draw = (e) => {
-    if (!isDrawing) return;
+    if (!isDrawing.current) return;
 
     // Set styles
     ctx.current.lineJoin = 'round';
     ctx.current.lineCap = 'round';
-    ctx.current.strokeStyle = `hsl(${hue}, 100%, 50%)`;
+    ctx.current.strokeStyle = `hsl(${hue.current}, 100%, 50%)`;
 
     // Draw line
     ctx.current.beginPath();
-    ctx.current.moveTo(lastCoords.x, lastCoords.y);
+    ctx.current.moveTo(lastCoords.current.x, lastCoords.current.y);
     ctx.current.lineTo(e.pageX, e.pageY);
     ctx.current.closePath();
     ctx.current.stroke();
 
-    setLastCoords({ x: e.pageX, y: e.pageY });
+    lastCoords.current = { x: e.pageX, y: e.pageY };
 
-    setHue(hue + 1);
-    if (hue >= 360) {
-      setHue(0);
-    }
+    hue.current = hue.current + 1;
+    if (hue.current >= 360) hue.current = 0;
     if (ctx.current.lineWidth >= 100 || ctx.current.lineWidth <= 1) {
       direction.current = !direction.current;
     }
@@ -71,7 +69,7 @@ export default function Canvas() {
     switch (e.button) {
       case 0:
         // console.log('left click');
-        setIsDrawing(false);
+        isDrawing.current = false;
         break;
       case 1:
         // middle click
@@ -86,8 +84,8 @@ export default function Canvas() {
   const handleMouseDown = (e) => {
     switch (e.button) {
       case 0:
-        setLastCoords({ x: e.pageX, y: e.pageY });
-        setIsDrawing(true);
+        lastCoords.current = { x: e.pageX, y: e.pageY };
+        isDrawing.current = true;
         break;
       case 2:
         //console.log('Nothing to do here');
@@ -96,7 +94,7 @@ export default function Canvas() {
   };
 
   const handleMouseOut = () => {
-    setIsDrawing(false);
+    isDrawing.current = false;
   };
 
   // Button handlers
