@@ -2,19 +2,26 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import Controls from './Controls';
 
+const CONTROLS_WIDTH = 300;
+
 export default function Canvas() {
   const [size, setSize] = useState({
-    width: window.innerWidth - 200,
+    width: window.innerWidth - CONTROLS_WIDTH,
     height: window.innerHeight,
   });
-
   
   const canvasRef = useRef(null);
   const ctx = useRef(null);
+
+  const strokeWidthSliderRef = useRef(null);
+  const colorSliderRef = useRef(null);
+  const crazyModeToggleRef = useRef(null);
+  
   const lastCoords = useRef({ x: 0, y: 0 });
   const isDrawing = useRef(false);
   const direction = useRef(true);
   const hue = useRef(0);
+  const crazyMode = useRef(false);
 
   const draw = (e) => {
     if (!isDrawing.current) return;
@@ -33,23 +40,26 @@ export default function Canvas() {
 
     lastCoords.current = { x: e.pageX, y: e.pageY };
 
-    hue.current = hue.current + 1;
-    if (hue.current >= 360) hue.current = 0;
-    if (ctx.current.lineWidth >= 100 || ctx.current.lineWidth <= 1) {
-      direction.current = !direction.current;
-    }
+    if (crazyMode.current) {
+      hue.current = hue.current + 1;
 
-    if (direction.current) {
-      ctx.current.lineWidth++;
-    } else {
-      ctx.current.lineWidth--;
+      if (hue.current >= 360) hue.current = 0;
+      if (ctx.current.lineWidth >= 100 || ctx.current.lineWidth <= 1) {
+        direction.current = !direction.current;
+      }
+
+      if (direction.current) {
+        ctx.current.lineWidth++;
+      } else {
+        ctx.current.lineWidth--;
+      }
     }
   };
 
   // Resize canvas on window resize
   useLayoutEffect(() => {
     function updateSize() {
-      setSize({ width: window.innerWidth - 200, height: window.innerHeight });
+      setSize({ width: window.innerWidth - CONTROLS_WIDTH, height: window.innerHeight });
     }
     window.addEventListener('resize', updateSize);
 
@@ -58,6 +68,8 @@ export default function Canvas() {
 
   useEffect(() => {
     ctx.current = canvasRef.current.getContext('2d');
+    ctx.current.lineWidth = strokeWidthSliderRef.current.value;
+    hue.current = colorSliderRef.current.value;
   }, []);
 
   // Mouse handlers
@@ -68,15 +80,7 @@ export default function Canvas() {
   const handleMouseUp = (e) => {
     switch (e.button) {
       case 0:
-        // console.log('left click');
         isDrawing.current = false;
-        break;
-      case 1:
-        // middle click
-        break;
-      case 2:
-        // console.log('right click');
-        // ctx.current.reset(); -> Clears the canvas, should be done using a button
         break;
     }
   };
@@ -86,9 +90,6 @@ export default function Canvas() {
       case 0:
         lastCoords.current = { x: e.pageX, y: e.pageY };
         isDrawing.current = true;
-        break;
-      case 2:
-        //console.log('Nothing to do here');
         break;
     }
   };
@@ -111,6 +112,20 @@ export default function Canvas() {
     downloadEl.remove();
   };
 
+  // Slider/toggle handlers
+  const handleStrokeWidthChange = (e) => {
+    ctx.current.lineWidth = e.target.value;
+  }
+
+  const handleColorChange = (e) => {
+    hue.current = e.target.value;
+  }
+
+  const handleCrazyModeChange = (e) => {
+    crazyMode.current = e.target.checked;
+    if (crazyMode.current) hue.current = colorSliderRef.current.value;
+  }
+
   return (
     <div className="canvas-container">
       <canvas
@@ -122,9 +137,17 @@ export default function Canvas() {
         onMouseUp={handleMouseUp}
         onMouseDown={handleMouseDown}
         onMouseOut={handleMouseOut}
-        onContextMenu={(e) => e.preventDefault()}
       />
-      <Controls onClear={handleClear} onSave={handleSave} />
+      <Controls
+        onClear={handleClear}
+        onSave={handleSave}
+        onStrokeWidthChange={handleStrokeWidthChange}
+        onColorChange={handleColorChange}
+        onCrazyModeChange={handleCrazyModeChange}
+        strokeWidthSliderRef={strokeWidthSliderRef}
+        colorSliderRef={colorSliderRef}
+        crazyModeToggleRef={crazyModeToggleRef}
+      />
     </div>
   );
 }
